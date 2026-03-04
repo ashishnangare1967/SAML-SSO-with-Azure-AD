@@ -58,6 +58,7 @@ export default function Home() {
           >
             Documentation
           </a>
+          <a href="/api/auth/saml/logout">Logout</a>
         </div>
       </main>
     </div>

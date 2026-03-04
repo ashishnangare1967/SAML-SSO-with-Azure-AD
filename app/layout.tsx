@@ -27,7 +27,34 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {children}
+        {/* Fixed Header */}
+        <header className="fixed top-0 left-0 right-0 bg-gray-800 text-white p-4 z-50">
+          <h1>My App</h1>
+        </header>
+
+        {/* Main Content with Fixed Sidebar */}
+        <div className="flex min-h-screen pt-16">
+          {/* Fixed Sidebar */}
+          <aside className="fixed left-0 top-16 w-64 h-[calc(100vh-4rem)] bg-gray-100 p-4 overflow-y-auto z-40">
+            <nav>
+              <ul className="space-y-2">
+                <li><a href="/" className="hover:text-blue-600">Home</a></li>
+                <li><a href="/about" className="hover:text-blue-600">About</a></li>
+                <li><a href="/contact" className="hover:text-blue-600">Contact</a></li>
+              </ul>
+            </nav>
+          </aside>
+
+          {/* Main Content */}
+          <main className="ml-64 flex-1 p-4">
+            {children}
+          </main>
+        </div>
+
+        {/* Footer */}
+        <footer className="bg-gray-800 text-white p-4 text-center">
+          <p>&copy; 2026 My App. All rights reserved.</p>
+        </footer>
       </body>
     </html>
   );
