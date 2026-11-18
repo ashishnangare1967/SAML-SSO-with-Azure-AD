@@ -5,27 +5,35 @@ saml.setSchemaValidator({
   validate: () => Promise.resolve("skipped"),
 });
 
-export const idp = saml.IdentityProvider({
-  entityID: `https://sts.windows.net/${process.env.TENANT_ID}/`,
- wantAuthnRequestsSigned: false,
-  // wantLogoutRequestSigned: false,   // 👈 add this
-  // wantLogoutResponseSigned: false,
+function signingCertificates(extra: string[] = []) {
+  const fromEnv = (process.env.IDP_SIGNING_CERT ?? "").replace(/\\n/g, "\n").trim();
+  const certs = [fromEnv, ...extra].filter((cert) => cert.length > 0);
+  return certs.length === 1 ? certs[0] : certs;
+}
 
-  singleSignOnService: [
-    {
-      Binding: "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect",
-      Location: `https://login.microsoftonline.com/${process.env.TENANT_ID}/saml2`,
-    },
-  ],
-  singleLogoutService: [
-    {
-      Binding: "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect",
-      Location: `https://login.microsoftonline.com/${process.env.TENANT_ID}/saml2`,
-    },
-  ],
+export function createIdp(extraSigningCerts: string[] = []) {
+  return saml.IdentityProvider({
+    entityID: `https://sts.windows.net/${process.env.TENANT_ID}/`,
+    wantAuthnRequestsSigned: false,
 
-  signingCert: `${process.env.IDP_SIGNING_CERT.replace(/\\n/g, "\n")}`,
-});
+    singleSignOnService: [
+      {
+        Binding: "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect",
+        Location: `https://login.microsoftonline.com/${process.env.TENANT_ID}/saml2`,
+      },
+    ],
+    singleLogoutService: [
+      {
+        Binding: "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect",
+        Location: `https://login.microsoftonline.com/${process.env.TENANT_ID}/saml2`,
+      },
+    ],
+
+    signingCert: signingCertificates(extraSigningCerts),
+  });
+}
+
+export const idp = createIdp();
 
 export const sp = saml.ServiceProvider({
   entityID: `${process.env.NEXT_PUBLIC_BASE_URL}api/auth/saml/metadata`,
@@ -44,6 +52,6 @@ export const sp = saml.ServiceProvider({
     },
   ],
 
-  privateKey: fs.readFileSync("sp-private-key.pem"),
-  signingCert: fs.readFileSync("sp-cert.pem"),
+  // privateKey: fs.readFileSync("sp-private-key.pem"),
+  // signingCert: fs.readFileSync("sp-cert.pem"),
 });

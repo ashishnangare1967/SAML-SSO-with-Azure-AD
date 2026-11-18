@@ -11,13 +11,8 @@ export async function GET(req: NextRequest) {
     return NextResponse.redirect(new URL("/", process.env.NEXT_PUBLIC_BASE_URL!));
   }
 
-  const nameID = {
-  value: nameid, // your EXT# value
-  Format: "urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified",
-};
-
   const { context } = await sp.createLogoutRequest(idp, "redirect", {
-   logoutNameID: nameID,
+    logoutNameID: nameid,
     sessionIndex,
   });
 

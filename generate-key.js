@@ -1,19 +1,29 @@
-const { generateKeyPairSync } = require("crypto");
+const forge = require("node-forge");
 const fs = require("fs");
 
-const { privateKey, publicKey } = generateKeyPairSync("rsa", {
-  modulusLength: 2048,
-  publicKeyEncoding: {
-    type: "spki",
-    format: "pem",
-  },
-  privateKeyEncoding: {
-    type: "pkcs8",
-    format: "pem",
-  },
-});
+const keys = forge.pki.rsa.generateKeyPair(2048);
+const cert = forge.pki.createCertificate();
 
-fs.writeFileSync("sp-private-key.pem", privateKey);
-fs.writeFileSync("sp-cert.pem", publicKey);
+cert.publicKey = keys.publicKey;
+cert.serialNumber = "01";
+cert.validity.notBefore = new Date();
+cert.validity.notAfter = new Date();
+cert.validity.notAfter.setFullYear(cert.validity.notBefore.getFullYear() + 10);
 
-console.log("✅ Keys generated successfully!");
+const attrs = [{ name: "commonName", value: "saml-sp" }];
+cert.setSubject(attrs);
+cert.setIssuer(attrs);
+cert.setExtensions([
+  { name: "basicConstraints", cA: false },
+  {
+    name: "keyUsage",
+    digitalSignature: true,
+    keyEncipherment: true,
+  },
+]);
+cert.sign(keys.privateKey, forge.md.sha256.create());
+
+fs.writeFileSync("sp-private-key.pem", forge.pki.privateKeyToPem(keys.privateKey));
+fs.writeFileSync("sp-cert.pem", forge.pki.certificateToPem(cert));
+
+console.log("Keys generated successfully");
